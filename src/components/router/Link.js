@@ -1,4 +1,4 @@
-import React, {Component} from 'react'
+import React, {Component} from 'react';
 
 export class Link extends Component {
 
@@ -7,8 +7,8 @@ export class Link extends Component {
         linkHandler: React.PropTypes.func
     };
 
-    handleClick = (ev) => {
-        ev.preventDefault();
+    handleClick = (evt) => {
+        evt.preventDefault();
         this.context.linkHandler(this.props.to)
     };
 
@@ -18,6 +18,6 @@ export class Link extends Component {
     }
 }
 
-Link.propTypes = {
-    to: React.PropTypes.string.isRequired
+Link.propsType = {
+    handleClick: React.PropTypes.string.isRequired
 };

@@ -1,4 +1,5 @@
+*.mf
 /out/
 /.idea/
 /target/
-*.mf
+/node_modules/

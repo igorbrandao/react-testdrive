@@ -1,10 +1,5 @@
 {
-  "list": [
-    {
-      "id": 1,
-      "name": "Setup Server",
-      "isComplete": true
-    },
+  "todos": [
     {
       "id": 2,
       "name": "Start Server",
@@ -17,13 +12,10 @@
     },
     {
       "id": 4,
-      "name": "Setup Fetch",
-      "isComplete": false
-    },
-    {
-      "id": 44687,
-      "name": "asd",
-      "isChecked": false
+      "name": "Server Fetch",
+      "isComplete": true
     }
   ]
 }
+
+//json-server -p 8080 -w db.json

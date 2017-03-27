@@ -1,5 +1,5 @@
-export const partial = (func, ...args) => func.bind(null, ...args);
+export const partial = (fn, ...args) => fn.bind(null, ...args);
 
-const _pipe = (func1, func2) => (...args) => func2(func1(...args));
+const _pipe = (fn, g) => (...args) => g(fn(...args));
 
-export const pipe = (...functions) => functions.reduce(_pipe);
+export const pipe = (...fns) => fns.reduce(_pipe);

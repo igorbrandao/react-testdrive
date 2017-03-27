@@ -1,123 +1,102 @@
 import React, {Component} from 'react';
 import logo from './logo.svg';
 import './App.css';
-import {Form, List, LinkFilterNav} from './components/sample';
-import {addItem, generateId, findById, toggleItem, updateItem, removeItem, filterItems} from './lib/sampleHelper';
+
 import {pipe, partial} from './lib/utils';
-import {loadItems, createItem} from './lib/itemService'
+import {TodoForm, TodoList, Footer} from './components/todo';
+import {loadTodos, createTodo, saveTodo, destroyTodo} from './lib/todoServer';
+import {addTodo, generateId, findById, toggleTodo, updateTodo, removeTodo, filterTodos} from './lib/todoHelpers';
 
 class App extends Component {
-
     state = {
-        list: [],
-        currentListItem: ''
+        todos: [],
+        currentTodo: ''
     };
 
     static contextTypes = {
         route: React.PropTypes.string
     };
 
-    componentDidMount(){
-        loadItems().then(list => this.setState({list}))
+    componentDidMount() {
+        loadTodos().then(todos => this.setState({todos}))
     }
 
-    handleRemove = (id, ev) => {
-        ev.preventDefault();
-        const updatedItems = removeItem(this.state.list, id);
+    handleInputChange = (evt) => {
         this.setState({
-            list: updatedItems
+            currentTodo: evt.target.value
+        });
+    };
+
+    handleSubmit = (evt) => {
+        evt.preventDefault();
+        const newId = generateId();
+        const newTodo = {id: newId, name: this.state.currentTodo, isComplete: false};
+        const updatedTodo = addTodo(this.state.todos, newTodo);
+        this.setState({
+            todos: updatedTodo,
+            currentTodo: '',
+            errorMessage: ''
+        });
+
+        createTodo(newTodo).then(res => this.showTempMessage('Todo Added'))
+    };
+
+    showTempMessage = (msg) => {
+        this.setState({message: msg});
+        setTimeout(() => this.setState({message: ''}), 2500)
+    };
+
+    handleEmptySubmit = (evt) => {
+        evt.preventDefault();
+        this.setState({
+            errorMessage: 'Please supply'
         })
+
     };
 
     handleToggle = (id) => {
-        const getUpdatedItems = pipe(findById, toggleItem, partial(updateItem, this.state.list));
-        const updatedItems = getUpdatedItems(id, this.state.list);
+        const getToggleTodo = pipe(findById, toggleTodo);
+        const updated = getToggleTodo(id, this.state.todos);
+        const getUpdatedTodos = partial(updateTodo, this.state.todos);
+        const updatedTodos = getUpdatedTodos(updated);
+        this.setState({todos: updatedTodos});
+        saveTodo(updated)
+            .then(() => this.showTempMessage('Todo Updated'))
 
-        /*
-
-        The two lines above simplify the logic from the commented lines below.
-
-        const item = findById(id, this.state.list);
-        const toggled = toggleItem(item);
-        const updatedItems = updateItem(this.state.list, toggled);
-
-        */
-
-        this.setState({
-            list: updatedItems
-        })
     };
 
-    handleInputChange = (ev) => {
-        this.setState({
-            currentListItem: ev.target.value
-        })
-    };
+    handleRemove = (id, evt) => {
+        evt.preventDefault();
 
-    handleEmptySubmit = (ev) => {
-        ev.preventDefault();
-        this.showTemporaryMessage('Please supply a name for the item.', 'errorMessage', 3000)
-    };
+        const updatedTodos = removeTodo(this.state.todos, id);
 
-    handleSubmit = (ev) => {
-        ev.preventDefault();
-        const newId = generateId();
-        const newItem = {id: newId, name: this.state.currentListItem, isChecked: false};
-        const updatedList = addItem(this.state.list, newItem);
         this.setState({
-            list: updatedList,
-            errorMessage: '',
-            currentListItem: ''
+            todos: updatedTodos
         });
-        createItem(newItem).then(() => this.showTemporaryMessage('A new item was successfully added.', 'successMessage', 2500))
-    };
 
-    showTemporaryMessage = (msgContent, msgName, msgTimeout) => {
-        this.setState({[msgName]: msgContent});
-        setTimeout(() => this.setState({[msgName]: ''}), msgTimeout)
+        destroyTodo(id).then(() => this.showTempMessage('Todo Deleted'))
     };
 
     render() {
-
-        const submitHandler = this.state.currentListItem ? this.handleSubmit : this.handleEmptySubmit;
-        const displayItems = filterItems(this.state.list, this.context.route);
+        const submitHandler = this.state.currentTodo ? this.handleSubmit : this.handleEmptySubmit;
+        const displayTodos = filterTodos(this.state.todos, this.context.route);
 
         return (
             <div className="App">
                 <div className="App-header">
                     <img src={logo} className="App-logo" alt="logo"/>
-                    <h2>React Component Usages</h2>
+                    <h2>React TODO</h2>
                 </div>
-                <div>
-                    <div className="Component-App">
-                        {this.state.errorMessage && <span className="error">{this.state.errorMessage}</span>}
-                        {this.state.successMessage && <span className="success">{this.state.successMessage}</span>}
-                        <Form
-                            currentListItem={this.state.currentListItem}
-                            handleInputChange={this.handleInputChange}
-                            handleSubmit={submitHandler}
-                        />
-                        <LinkFilterNav/>
-                        <List
-                            handleToggle={this.handleToggle}
-                            handleRemove={this.handleRemove}
-                            list={displayItems}
-                        />
-                    </div>
-                    <div>
-                        <section>
-                            <p>Some paragraph with some content written.</p>
-                        </section>
-                        <section>
-                            <p>Another paragraph with some content written.</p>
-                        </section>
-                        <section>
-                            <p>One more paragraph with some content written.</p>
-                        </section>
-                        <section>
-                            <p>The last paragraph with some content written.</p>
-                        </section>
-                    </div>
+                <div className="Todo-App">
+                    {this.state.errorMessage && <span className="error">{this.state.errorMessage}</span>}
+                    {this.state.message && <span className="success">{this.state.message}</span>}
+                    <TodoForm handleInputChange={this.handleInputChange}
+                              currentTodo={this.state.currentTodo}
+                              handleSubmit={submitHandler}/>
+                    <TodoList handleToggle={this.handleToggle}
+                              todos={displayTodos}
+                              handleRemove={this.handleRemove}/>
+                    <Footer />
                 </div>
             </div>
         );
